@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Virtual Fitting Multi-Pakaian dan Aksesoris</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+        }
+        /* Style untuk menyembunyikan input file standar */
+        .file-input {
+            opacity: 0;
+            position: absolute;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .file-label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            border: 2px dashed #9ca3af;
+        }
+        .file-label:hover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        
+        /* CSS untuk Gradien Swatch */
+        .gradient-swatch {
+            width: 100%;
+            padding-top: 100%; /* Membuat kotak (aspect ratio 1:1) */
+            border-radius: 0.5rem;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.1s, box-shadow 0.2s;
+            background-size: cover;
+            border: 3px solid transparent;
+        }
+        .gradient-swatch:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .gradient-swatch.active {
+            border-color: #4f46e5; /* Border ungu/indigo untuk menandakan aktif */
+            box-shadow: 0 0 0 2px #c7d2fe;
+        }
+        .gradient-swatch-label {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem; /* text-xs */
+            color: #4b5563; /* text-gray-600 */
+            white-space: nowrap;
+        }
+        
+        /* Custom Classes for Gradients */
+        .grad-blue-sky {
+            background-image: linear-gradient(to bottom right, #60a5fa, #4338ca); /* blue-400 to indigo-700 */
+        }
+        .grad-gold-lux {
+            background-image: linear-gradient(to top right, #fde047, #b45309); /* yellow-300 to amber-700 */
+        }
+        .grad-pink-pop {
+            background-image: linear-gradient(to bottom left, #f472b6, #a855f7); /* pink-400 to purple-500 */
+        }
+        .grad-teal-forest {
+            background-image: linear-gradient(to right, #34d399, #14b8a6); /* green-400 to teal-500 */
+        }
+        .grad-dark-night {
+            background-image: linear-gradient(to top, #1f2937, #000000); /* gray-800 to black */
+        }
+        .grad-coral-peach {
+            background-image: linear-gradient(to bottom, #f97316, #fcd34d); /* orange-500 to amber-300 */
+        }
+        .grad-vivid-blue {
+            background-image: linear-gradient(to top, #1d4ed8, #3b82f6); /* blue-700 to blue-500, memberikan kesan elektrik */
+        }
+        
+        /* Color input style */
+        #customColorInput {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 40px; 
+            height: 40px; 
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            border-radius: 50%;
+        }
+        #customColorInput::-webkit-color-swatch {
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 0 0 2px white, 0 0 0 4px #4f46e5;
+        }
+        #customColorInput::-moz-color-swatch {
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 0 0 2px white, 0 0 0 4px #4f46e5;
+        }
+        
+        .color-hex-display {
+            font-family: monospace;
+            text-transform: uppercase;
+        }
+        
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2">
+                😎 AI Virtual Fitting Pakaian & Aksesoris
+            </h1>
+            <p class="text-gray-500">Kualitas Fitroom-Grade: Rendering Kain Realistis, Jilbab, Kacamata, Jam Tangan, dan lainnya.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            <div class="p-6 bg-white rounded-xl shadow-lg h-full space-y-6">
+                
+                <h2 class="text-2xl font-semibold mb-6 text-gray-800">1. Unggah Model & Aset</h2>
+
+                <div class="border-b pb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2 font-bold">Foto Model (WAJIB)</label>
+                    <input type="file" id="modelImageInput" accept="image/*" class="file-input">
+                    <label for="modelImageInput" class="file-label text-blue-600 border-blue-300 hover:bg-blue-50">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        <span id="modelImageName">Unggah Foto Model</span>
+                    </label>
+                    <div id="modelPreview" class="mt-3 hidden">
+                        <img class="max-h-32 rounded-lg object-contain mx-auto" id="modelImagePreview" alt="Pratinjau Model">
+                    </div>
+                </div>
+
+                <div class="border-b pb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2 font-bold">Pakaian yang Akan Dicoba (OPSIONAL)</label>
+                    <textarea id="clothingInputNote" class="block text-xs text-gray-500 mb-2 w-full p-2 border-none bg-yellow-50 rounded-lg" readonly>Jika diisi, AI akan melakukan Virtual Fitting dengan Rendering Kain Realistis.</textarea>
+                    <input type="file" id="clothingImageInput" accept="image/*" class="file-input">
+                    <label for="clothingImageInput" class="file-label text-green-600 border-green-300 hover:bg-green-50">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        <span id="clothingImageName">Unggah Foto Pakaian (Opsional)</span>
+                    </label>
+                    <div id="clothingPreview" class="mt-3 hidden">
+                        <img class="max-h-32 rounded-lg object-contain mx-auto" id="clothingImagePreview" alt="Pratinjau Pakaian">
+                    </div>
+                </div>
+
+                <div class="border-b pb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2 font-bold">Jilbab / Headwear (OPSIONAL)</label>
+                    <div class="flex items-center space-x-4 mb-3 text-sm">
+                        <label class="flex items-center">
+                            <input type="radio" name="hijabMode" value="none" checked class="form-radio text-gray-600 h-4 w-4" onchange="toggleHijabInput('none')">
+                            <span class="ml-1 text-gray-700">Tidak Ada Perubahan</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="hijabMode" value="predefined" class="form-radio text-purple-600 h-4 w-4" onchange="toggleHijabInput('predefined')">
+                            <span class="ml-1 text-gray-700">Pilih Model Bawaan</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="hijabMode" value="upload" class="form-radio text-purple-600 h-4 w-4" onchange="toggleHijabInput('upload')">
+                            <span class="ml-1 text-gray-700">Unggah Sendiri</span>
+                        </label>
+                    </div>
+
+                    <div id="predefinedHijabSelector" class="hidden mb-3 p-3 bg-gray-100 rounded-lg">
+                        <label for="predefinedHijab" class="block text-xs font-medium text-gray-700 mb-2">Pilih Model Jilbab:</label>
+                        <select id="predefinedHijab" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 p-2">
+                            <option value="">-- Pilih Model --</option>
+                            <option value="Jilbab Pashmina Hitam Polos, kain sutra yang halus">Pashmina Sutra Hitam (Halus & Jatuh)</option>
+                            <option value="Jilbab Segiempat Biru Dongker, kain katun yang sedikit kaku">Segiempat Katun Biru (Struktur & Formal)</option>
+                            <option value="Jilbab Instan Warna Cream, kain jersey yang elastis">Jilbab Instan Jersey Cream (Elastis & Nyaman)</option>
+                        </select>
+                    </div>
+
+                    <div id="uploadHijabInput" class="hidden">
+                        <input type="file" id="hijabImageInput" accept="image/*" class="file-input">
+                        <label for="hijabImageInput" class="file-label text-purple-600 border-purple-300 hover:bg-purple-50">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span id="hijabImageName">Unggah Foto Jilbab/Headwear</span>
+                        </label>
+                        <div id="hijabPreview" class="mt-3 hidden">
+                            <img class="max-h-32 rounded-lg object-contain mx-auto" id="hijabImagePreview" alt="Pratinjau Jilbab">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pb-4 border-b">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-800 pt-2">2. Aksesoris Tambahan (OPSIONAL)</h2>
+                    
+                    <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                        <label class="block text-sm font-medium text-gray-700 mb-2 font-bold">Topi / Cap</label>
+                        <div class="flex items-center space-x-4 mb-2 text-sm">
+                            <label class="flex items-center">
+                                <input type="radio" name="hatMode" value="none" checked class="form-radio text-gray-600 h-4 w-4" onchange="toggleHatInput('none')">
+                                <span class="ml-1 text-gray-700">Tidak Pakai</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="hatMode" value="predefined" class="form-radio text-red-600 h-4 w-4" onchange="toggleHatInput('predefined')">
+                                <span class="ml-1 text-gray-700">Pilih AI Model</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="hatMode" value="upload" class="form-radio text-red-600 h-4 w-4" onchange="toggleHatInput('upload')">
+                                <span class="ml-1 text-gray-700">Unggah Sendiri</span>
+                            </label>
+                        </div>
+                        <div id="predefinedHatSelector" class="hidden mb-2">
+                            <select id="predefinedHat" class="w-full border-gray-300 rounded-lg shadow-sm p-2 text-sm">
+                                <option value="">-- Pilih Topi --</option>
+                                <option value="Baseball cap hitam polos">Baseball Cap Hitam</option>
+                                <option value="Fedora hat cokelat kulit">Topi Fedora Cokelat</option>
+                                <option value="Beanie rajut abu-abu">Beanie Rajut Abu-abu</option>
+                            </select>
+                        </div>
+                        <div id="uploadHatInput" class="hidden">
+                            <input type="file" id="hatImageInput" accept="image/*" class="file-input">
+                            <label for="hatImageInput" class="file-label text-red-600 border-red-300 hover:bg-red-50 py-2">
+                                <span id="hatImageName">Unggah Foto Topi/Cap</span>
+                            </label>
+                            <div id="hatPreview" class="mt-2 hidden">
+                                <img class="max-h-24 rounded-lg object-contain mx-auto" id="hatImagePreview" alt="Pratinjau Topi">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                        <label class="block text-sm font-medium text-gray-700 mb-2 font-bold">Kalung</label>
+                         <div class="flex items-center space-x-4 mb-2 text-sm">
+                            <label class="flex items-center">
+                                <input type="radio" name="necklaceMode" value="none" checked class="form-radio text-gray-600 h-4 w-4" onchange="toggleNecklaceInput('none')">
+                                <span class="ml-1 text-gray-700">Tidak Pakai</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="necklaceMode" value="predefined" class="form-radio text-yellow-600 h-4 w-4" onchange="toggleNecklaceInput('predefined')">
+                                <span class="ml-1 text-gray-700">Pilih AI Model</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="necklaceMode" value="upload" class="form-radio text-yellow-600 h-4 w-4" onchange="toggleNecklaceInput('upload')">
+                                <span class="ml-1 text-gray-700">Unggah Sendiri</span>
+                            </label>
+                        </div>
+                        <div id="predefinedNecklaceSelector" class="hidden mb-2">
+                            <select id="predefinedNecklace" class="w-full border-gray-300 rounded-lg shadow-sm p-2 text-sm">
+                                <option value="">-- Pilih Kalung --</option>
+                                <option value="Kalung emas tebal dengan liontin inisial">Kalung Emas (Tebal)</option>
+                                <option value="Kalung berlian rantai tipis dengan liontin solitaire">Kalung Berlian (Solitaire)</option>
+                                <option value="Choker rantai perak minimalis">Choker Rantai Perak</option>
+                            </select>
+                        </div>
+                        <div id="uploadNecklaceInput" class="hidden">
+                            <input type="file" id="necklaceImageInput" accept="image/*" class="file-input">
+                            <label for="necklaceImageInput" class="file-label text-yellow-600 border-yellow-300 hover:bg-yellow-50 py-2">
+                                <span id="necklaceImageName">Unggah Foto Kalung</span>
+                            </label>
+                            <div id="necklacePreview" class="mt-2 hidden">
+                                <img class="max-h-24 rounded-lg object-contain mx-auto" id="necklaceImagePreview" alt="Pratinjau Kalung">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                        <label for="selectedEyewear" class="block text-sm font-medium text-gray-700 mb-2 font-bold">Kacamata & Penutup Wajah</label>
+                        <select id="selectedEyewear" class="w-full border-gray-300 rounded-lg shadow-sm p-2 text-sm mb-2">
+                            <option value="">-- Kacamata (AI Generate) --</option>
+                            <option value="Kacamata hitam keren dan trendi disesuaikan dengan bentuk wajah, dengan lensa hitam polos tanpa efek cermin">Kacamata Hitam Trendi (Solid, Sesuai Wajah)</option>
+                            <option value="Kacamata hitam Aviator trendi, dengan lensa hitam polos tanpa efek cermin">Kacamata Aviator Trend (Solid)</option>
+                            <option value="Kacamata baca bingkai tebal sesuai bentuk wajah">Kacamata Baca Sesuai Wajah</option>
+                            <option value="Kacamata cat-eye retro">Kacamata Cat-Eye Retro</option>
+                        </select>
+                        
+                        <select id="eyewearPlacement" class="w-full border-gray-300 rounded-lg shadow-sm p-2 text-sm mt-2">
+                            <option value="di wajah" selected>Gaya Pakai: Di Wajah</option>
+                            <option value="di atas kepala">Gaya Pakai: Di Atas Kepala</option>
+                        </select>
+
+                        <select id="selectedFaceCovering" class="w-full border-gray-300 rounded-lg shadow-sm p-2 text-sm mt-2">
+                            <option value="">-- Penutup Wajah (AI Generate) --</option>
+                            <option value="Masker kain medis 3 lapis">Masker Wajah (Medis)</option>
+                            <option value="Topeng pesta Venetian minimalis">Topeng Pesta (Venetian)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <label for="selectedWatch" class="block text-sm font-medium text-gray-700 mb-2 font-bold">Jam Tangan (Pergelangan Tangan)</label>
+                        <select id="selectedWatch" class="w-full border-gray-300 rounded-lg shadow-sm p-2 text-sm">
+                            <option value="">-- Pilih Jam Tangan (AI Generate) --</option>
+                            <option value="Jam tangan mewah Rolex Submariner stainless steel di pergelangan tangan kiri">Rolex Submariner</option>
+                            <option value="Jam tangan kulit klasik Alexander Christie di pergelangan tangan kiri">Alexander Christie Klasik</option>
+                            <option value="Smartwatch sporty modern di pergelangan tangan kiri">Smartwatch Sporty</option>
+                        </select>
+                    </div>
+                </div>
+
+                <h2 class="text-2xl font-semibold mb-6 text-gray-800 pt-4">3. Instruksi Bebas AI (Opsional)</h2>
+
+                <div class="border-b pb-4">
+                    <label for="promptInput" class="block text-sm font-medium text-gray-700 mb-2">Instruksi Latar Belakang & Gaya</label>
+                    <textarea id="promptInput" rows="3" placeholder="Contoh: 'Ubah model menjadi latar belakang pantai dengan pencahayaan sore hari yang hangat. Pakaian harus memiliki detail payet.' Instruksi ini hanya akan diterapkan jika mode 'AI Scene Bebas' dipilih." class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-3"></textarea>
+                </div>
+                
+                <h2 class="text-2xl font-semibold text-gray-800 pt-4">4. Pilih Latar Belakang & Hasilkan</h2>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2 font-bold">Mode Latar Belakang</label>
+                    <div class="flex flex-wrap gap-4 text-sm">
+                        
+                        <label class="flex items-center space-x-1 cursor-pointer p-2 rounded-lg border border-indigo-600 bg-indigo-50 transition duration-150" id="mode-original-label">
+                            <input type="radio" name="backgroundMode" value="original" checked class="form-radio text-indigo-600 h-4 w-4" onchange="resetBackgroundOptions('original')">
+                            <span class="text-gray-700">Asli</span>
+                        </label>
+                        
+                        <label class="flex items-center space-x-1 cursor-pointer p-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition duration-150" id="mode-free-scene-label">
+                            <input type="radio" name="backgroundMode" value="free-scene" class="form-radio text-indigo-600 h-4 w-4" onchange="resetBackgroundOptions('free-scene')">
+                            <span class="text-gray-700">AI Scene Bebas</span>
+                        </label>
+                        
+                        <label class="flex items-center space-x-1 cursor-pointer p-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition duration-150" id="mode-solid-custom-label">
+                            <input type="radio" name="backgroundMode" value="solid-custom" class="form-radio text-indigo-600 h-4 w-4" onchange="showCustomSolidColors()">
+                            <span class="text-gray-700">Warna Solid Kustom</span>
+                        </label>
+
+                        <label class="flex items-center space-x-1 cursor-pointer p-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition duration-150" id="mode-gradient-label">
+                            <input type="radio" name="backgroundMode" value="gradient" class="form-radio text-indigo-600 h-4 w-4" onchange="showGradients()">
+                            <span class="text-gray-700">Gradien Aestetik</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="customSolidColorOptions" class="hidden p-4 bg-gray-50 rounded-xl mb-6 space-y-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Pilih Warna Solid (Kode HEX atau Palet):</label>
+                    
+                    <div class="flex items-center space-x-4">
+                        <input type="color" id="customColorInput" value="#4f46e5" onchange="updateHexDisplay(this.value)">
+                        <div class="flex flex-col">
+                            <span class="text-xs text-gray-500">HEX Warna Terpilih:</span>
+                            <span id="hexDisplay" class="color-hex-display text-lg font-bold text-indigo-700">#4F46E5</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <label class="block text-xs font-semibold text-gray-600 mb-2">Warna Populer (Pas Foto/Studio):</label>
+                        <div class="flex flex-wrap gap-3">
+                            <div class="w-8 h-8 rounded-full border-2 border-transparent transition duration-200 cursor-pointer shadow-md" style="background-color: #0040FF;" onclick="selectPresetColor('#0040FF', this)"></div>
+                            <div class="w-8 h-8 rounded-full border-2 border-transparent transition duration-200 cursor-pointer shadow-md" style="background-color: #FF0000;" onclick="selectPresetColor('#FF0000', this)"></div>
+                            <div class="w-8 h-8 rounded-full border-2 border-transparent transition duration-200 cursor-pointer shadow-md" style="background-color: #FFFFFF; border: 1px solid #ccc;" onclick="selectPresetColor('#FFFFFF', this)"></div>
+                            <div class="w-8 h-8 rounded-full border-2 border-transparent transition duration-200 cursor-pointer shadow-md" style="background-color: #808080;" onclick="selectPresetColor('#808080', this)"></div>
+                            <div class="w-8 h-8 rounded-full border-2 border-transparent transition duration-200 cursor-pointer shadow-md" style="background-color: #333333;" onclick="selectPresetColor('#333333', this)"></div>
+                            <div class="w-8 h-8 rounded-full border-2 border-transparent transition duration-200 cursor-pointer shadow-md" style="background-color: #008000;" onclick="selectPresetColor('#008000', this)"></div>
+                            <div class="w-8 h-8 rounded-full border-2 border-transparent transition duration-200 cursor-pointer shadow-md" style="background-color: #FFA500;" onclick="selectPresetColor('#FFA500', this)"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="gradientOptions" class="hidden p-4 bg-gray-50 rounded-xl mb-6">
+                    <label class="block text-xs font-semibold text-gray-600 mb-3">Pilih Gradien Aestetik (Klik):</label>
+                    <div id="gradientSelectorGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-4">
+                        </div>
+                </div>
+
+
+                <button id="generateButton" class="w-full py-3 px-4 bg-indigo-600 text-white font-semibold rounded-xl shadow-md hover:bg-indigo-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                    <svg id="spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span id="buttonText">Hasilkan Gambar AI</span>
+                </button>
+                
+                <p class="text-xs text-gray-400 text-center mt-4">Menggunakan model `gemini-2.5-flash-image-preview` untuk Image-to-Image.</p>
+
+            </div>
+
+            <div class="p-6 bg-white rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold mb-6 text-gray-800">5. Hasil Gambar & Download</h2>
+
+                <div id="resultContainer" class="bg-gray-100 p-4 rounded-lg flex items-center justify-center min-h-[300px]">
+                    <div id="initialMessage" class="text-center text-gray-500">
+                        <svg class="w-16 h-16 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-7-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <p>Unggah foto Model (Wajib) dan Pakaian/Jilbab/Aksesoris (Opsional), lalu tekan tombol "Hasilkan".</p>
+                    </div>
+                    <img id="resultImage" class="hidden max-w-full h-auto rounded-lg shadow-xl" alt="Hasil Fitting Virtual AI">
+                    <p id="errorMessage" class="hidden text-red-500 text-center"></p>
+                </div>
+                
+                <div id="actionButtons" class="hidden mt-4 space-y-3">
+                    <button id="downloadButton" class="w-full py-3 px-4 bg-green-500 text-white font-semibold rounded-xl shadow-md hover:bg-green-600 transition duration-300 flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Download Hasil (PNG)
+                    </button>
+
+                    <button id="describeButton" class="w-full py-3 px-4 bg-purple-600 text-white font-semibold rounded-xl shadow-md hover:bg-purple-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                        <svg id="describeSpinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span id="describeButtonText">✨ Dapatkan Deskripsi Gaya (AI)</span>
+                    </button>
+                </div>
+                
+                <div id="descriptionOutput" class="hidden mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Deskripsi Gaya AI:</h3>
+                    <pre id="descriptionText" class="whitespace-pre-wrap text-sm text-gray-700"></pre>
+                </div>
+
+                
+            </div>
+
+        </div>
+
+    </div>
+
+    <script type="module">
+        // Variabel global yang disediakan oleh lingkungan Canvas
+        
+        // =========================================================================
+        // START PERUBAHAN UNTUK INTEGRASI CLOUDFLARE WORKER PROXY
+        // =========================================================================
+        
+        // apiKey tidak lagi didefinisikan di sini untuk keamanan.
+        
+        // URL API sekarang diarahkan ke endpoint Cloudflare Worker yang akan mengurus Secret.
+        const imageApiUrl = "/api/gemini-image"; // BARIS INI DIUBAH
+        const textApiUrl = "/api/gemini-text";   // BARIS INI DIUBAH
+
+        // =========================================================================
+        // END PERUBAHAN
+        // =========================================================================
+
+        // Elemen DOM
+        const modelImageInput = document.getElementById('modelImageInput');
+        const clothingImageInput = document.getElementById('clothingImageInput');
+        const promptInput = document.getElementById('promptInput');
+        const generateButton = document.getElementById('generateButton');
+        const spinner = document.getElementById('spinner');
+        const buttonText = document.getElementById('buttonText');
+        const resultImage = document.getElementById('resultImage');
+        const resultContainer = document.getElementById('resultContainer');
+        const initialMessage = document.getElementById('initialMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const downloadButton = document.getElementById('downloadButton');
+        
+        // Elemen Jilbab, Topi, Kalung, Aksesoris
+        const predefinedHijab = document.getElementById('predefinedHijab');
+        const hijabImageInput = document.getElementById('hijabImageInput');
+        const predefinedHijabSelector = document.getElementById('predefinedHijabSelector');
+        const uploadHijabInput = document.getElementById('uploadHijabInput');
+        
+        const hatImageInput = document.getElementById('hatImageInput');
+        const predefinedHat = document.getElementById('predefinedHat');
+        const predefinedHatSelector = document.getElementById('predefinedHatSelector');
+        const uploadHatInput = document.getElementById('uploadHatInput');
+
+        const necklaceImageInput = document.getElementById('necklaceImageInput');
+        const predefinedNecklace = document.getElementById('predefinedNecklace');
+        const predefinedNecklaceSelector = document.getElementById('predefinedNecklaceSelector');
+        const uploadNecklaceInput = document.getElementById('uploadNecklaceInput');
+        
+        const selectedEyewear = document.getElementById('selectedEyewear');
+        const eyewearPlacement = document.getElementById('eyewearPlacement'); 
+        const selectedFaceCovering = document.getElementById('selectedFaceCovering');
+        const selectedWatch = document.getElementById('selectedWatch');
+        
+        // Elemen untuk fitur Deskripsi Gaya
+        const actionButtons = document.getElementById('actionButtons');
+        const describeButton = document.getElementById('describeButton');
+        const describeSpinner = document.getElementById('describeSpinner');
+        const describeButtonText = document.getElementById('describeButtonText');
+        const descriptionOutput = document.getElementById('descriptionOutput');
+        const descriptionText = document.getElementById('descriptionText');
+        
+        // Elemen Pilihan Latar Belakang
+        const customSolidColorOptions = document.getElementById('customSolidColorOptions'); // NEW ID
+        const customColorInput = document.getElementById('customColorInput');           // NEW ID
+        const hexDisplay = document.getElementById('hexDisplay');                       // NEW ID
+        const gradientOptions = document.getElementById('gradientOptions');
+        const gradientSelectorGrid = document.getElementById('gradientSelectorGrid');
+        
+        const modeOriginalLabel = document.getElementById('mode-original-label');
+        const modeFreeSceneLabel = document.getElementById('mode-free-scene-label');
+        const modeSolidCustomLabel = document.getElementById('mode-solid-custom-label'); // NEW Label
+        const modeGradientLabel = document.getElementById('mode-gradient-label');
+
+        let modelBase64 = null;
+        let clothingBase64 = null;
+        let hijabBase64 = null; 
+        let hatBase64 = null; 
+        let necklaceBase64 = null; 
+        let finalImageBase64 = null;
+        
+        let selectedBackgroundMode = 'original'; // Default mode
+        let selectedGradientPrompt = null;
+        let selectedHexColor = '#4f46e5'; // Default HEX color (warna indigo)
+
+        // --- Data Gradien Aestetik ---
+        const gradientPresets = [
+            { id: 'grad-1', name: 'Biru Langit Senja', class: 'grad-blue-sky', prompt: "latar belakang dengan gradien transisi lembut dari biru langit cerah ke ungu indigo yang gelap, menciptakan suasana senja yang damai" },
+            { id: 'grad-7', name: 'Biru Cerah (Vivid)', class: 'grad-vivid-blue', prompt: "latar belakang dengan gradien biru cerah yang hidup dan elektrik, transisi mulus dari biru tua ke biru muda, menciptakan kesan energi dan modern" }, 
+            { id: 'grad-2', name: 'Emas Mewah', class: 'grad-gold-lux', prompt: "latar belakang dengan gradien emas metalik yang mewah dan berkilau, cocok untuk fotografi produk kelas atas" },
+            { id: 'grad-3', name: 'Merah Jambu Pop', class: 'grad-pink-pop', prompt: "latar belakang dengan gradien cerah dan hidup, transisi dari merah muda cerah (pink) ke ungu lavender" },
+            { id: 'grad-4', name: 'Hutan Tropis', class: 'grad-teal-forest', prompt: "latar belakang dengan gradien segar dari hijau hutan ke biru kehijauan (teal), menciptakan kesan alami dan bersih" },
+            { id: 'grad-5', name: 'Malam Gelap', class: 'grad-dark-night', prompt: "latar belakang dengan gradien gelap, transisi dari abu-abu gelap ke hitam pekat, menciptakan kesan dramatis dan misterius" },
+            { id: 'grad-6', name: 'Koral & Peach', class: 'grad-coral-peach', prompt: "latar belakang dengan gradien transisi hangat dan lembut dari oranye koral ke kuning peach, menciptakan kesan ceria dan feminin" },
+        ];
+        
+        // --- Fungsi Helper untuk UI Latar Belakang & Gradien ---
+        
+        function updateModeLabelActiveState() {
+            const mode = document.querySelector('input[name="backgroundMode"]:checked').value;
+            // Mode 'solid-custom' menggantikan 'solid'
+            const allLabels = [modeOriginalLabel, modeFreeSceneLabel, modeSolidCustomLabel, modeGradientLabel];
+            
+            allLabels.forEach(label => {
+                label.classList.remove('border-indigo-600', 'bg-indigo-50');
+                label.classList.add('border-gray-300', 'hover:bg-gray-100');
+            });
+            
+            // Perhatikan penggantian ID di sini: mode.replace(/-/g, '')
+            const activeLabel = document.getElementById(`mode-${mode.replace(/-/g, '')}-label`);
+            if (activeLabel) {
+                activeLabel.classList.add('border-indigo-600', 'bg-indigo-50');
+                activeLabel.classList.remove('border-gray-300', 'hover:bg-gray-100');
+            }
+        }
+        
+        window.resetBackgroundOptions = function(mode) {
+            selectedBackgroundMode = mode;
+            selectedGradientPrompt = null;
+            customSolidColorOptions.classList.add('hidden');
+            gradientOptions.classList.add('hidden');
+            // Reset visual active state
+            document.querySelectorAll('.gradient-swatch.active').forEach(el => el.classList.remove('active'));
+            updateModeLabelActiveState();
+        }
+        
+        window.showCustomSolidColors = function() { // NEW FUNCTION
+            selectedBackgroundMode = 'solid-custom';
+            selectedGradientPrompt = null; 
+            customSolidColorOptions.classList.remove('hidden');
+            gradientOptions.classList.add('hidden');
+            // Pastikan tidak ada gradien yang aktif secara visual
+            document.querySelectorAll('.gradient-swatch.active').forEach(el => el.classList.remove('active'));
+            updateModeLabelActiveState();
+        }
+
+        window.showGradients = function() {
+            selectedBackgroundMode = 'gradient';
+            selectedHexColor = customColorInput.value; // Simpan HEX kustom saat beralih
+            gradientOptions.classList.remove('hidden');
+            customSolidColorOptions.classList.add('hidden');
+            updateModeLabelActiveState();
+        }
+        
+        window.updateHexDisplay = function(hex) { // NEW FUNCTION
+            selectedHexColor = hex.toUpperCase();
+            hexDisplay.textContent = selectedHexColor;
+            // Pastikan mode sudah 'solid-custom' jika user mengubah warna
+            if (selectedBackgroundMode !== 'solid-custom') {
+                 // Ini akan memicu mode 'solid-custom' jika berubah via JS/UI lain
+                 document.querySelector('input[name="backgroundMode"][value="solid-custom"]').checked = true;
+                 showCustomSolidColors();
+            }
+        }
+        
+        window.selectPresetColor = function(hex, element) { // NEW FUNCTION
+            customColorInput.value = hex;
+            updateHexDisplay(hex);
+            
+            // Optional: Tambahkan border ke preset yang terpilih (hanya visual, tidak mempengaruhi logika)
+            document.querySelectorAll('#customSolidColorOptions .w-8').forEach(el => el.classList.remove('border-indigo-600'));
+            element.classList.add('border-indigo-600');
+        }
+        
+        function selectGradient(element, prompt) {
+            selectedGradientPrompt = prompt;
+            selectedHexColor = customColorInput.value; // Simpan HEX kustom saat beralih
+            
+            // Reset visual active state
+            document.querySelectorAll('.gradient-swatch.active').forEach(el => el.classList.remove('active'));
+            
+            // Set active state pada yang baru diklik
+            element.classList.add('active');
+        }
+        
+        function initializeGradients() {
+            gradientPresets.forEach(preset => {
+                const swatchContainer = document.createElement('div');
+                swatchContainer.className = 'flex flex-col items-center relative';
+                
+                const swatchEl = document.createElement('div');
+                swatchEl.id = preset.id;
+                swatchEl.className = `gradient-swatch ${preset.class}`;
+                
+                swatchContainer.onclick = (function(p, s) {
+                    return function() {
+                        // Pastikan radio button 'gradient' terpilih
+                        document.querySelector('input[name="backgroundMode"][value="gradient"]').checked = true;
+                        showGradients(); // Panggil ini untuk memastikan panel terlihat
+                        selectGradient(s, p);
+                    };
+                })(preset.prompt, swatchEl);
+                
+                const labelEl = document.createElement('span');
+                labelEl.className = 'gradient-swatch-label mt-1 text-center';
+                labelEl.textContent = preset.name;
+                
+                swatchContainer.appendChild(swatchEl);
+                swatchContainer.appendChild(labelEl);
+                gradientSelectorGrid.appendChild(swatchContainer);
+            });
+        }
+        
+        initializeGradients(); // Panggil saat load
+        // Inisialisasi awal untuk warna solid kustom default
+        updateHexDisplay(customColorInput.value); 
+        resetBackgroundOptions('original');
+
+        // --- Fungsi Helper untuk UI Jilbab, Topi, Kalung & File Input ---
+        
+        window.toggleHijabInput = function(mode) {
+            predefinedHijabSelector.classList.add('hidden');
+            uploadHijabInput.classList.add('hidden');
+            hijabBase64 = null;
+            hijabImageInput.value = '';
+            document.getElementById('hijabImageName').textContent = 'Unggah Foto Jilbab/Headwear';
+            document.getElementById('hijabPreview').classList.add('hidden');
+
+            if (mode === 'predefined') {
+                predefinedHijabSelector.classList.remove('hidden');
+            } else if (mode === 'upload') {
+                uploadHijabInput.classList.remove('hidden');
+            }
+        }
+
+        window.toggleHatInput = function(mode) {
+            predefinedHatSelector.classList.add('hidden');
+            uploadHatInput.classList.add('hidden');
+            hatBase64 = null;
+            hatImageInput.value = '';
+            document.getElementById('hatImageName').textContent = 'Unggah Foto Topi/Cap';
+            document.getElementById('hatPreview').classList.add('hidden');
+
+            if (mode === 'predefined') {
+                predefinedHatSelector.classList.remove('hidden');
+            } else if (mode === 'upload') {
+                uploadHatInput.classList.remove('hidden');
+            }
+        }
+        
+        window.toggleNecklaceInput = function(mode) {
+            predefinedNecklaceSelector.classList.add('hidden');
+            uploadNecklaceInput.classList.add('hidden');
+            necklaceBase64 = null;
+            necklaceImageInput.value = '';
+            document.getElementById('necklaceImageName').textContent = 'Unggah Foto Kalung';
+            document.getElementById('necklacePreview').classList.add('hidden');
+
+            if (mode === 'predefined') {
+                predefinedNecklaceSelector.classList.remove('hidden');
+            } else if (mode === 'upload') {
+                uploadNecklaceInput.classList.remove('hidden');
+            }
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]); 
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function alertMessage(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('hidden');
+            resultImage.classList.add('hidden');
+            initialMessage.classList.add('hidden');
+            actionButtons.classList.add('hidden'); 
+            descriptionOutput.classList.add('hidden'); 
+            resultContainer.classList.remove('bg-gray-100');
+            resultContainer.classList.add('border-2', 'border-red-500');
+
+            setTimeout(() => {
+                errorMessage.classList.add('hidden');
+                resultContainer.classList.remove('border-2', 'border-red-500');
+                initialMessage.classList.remove('hidden');
+                resultContainer.classList.add('bg-gray-100');
+            }, 5000);
+        }
+
+        // --- Event Listeners Input File ---
+        
+        modelImageInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                try {
+                    modelBase64 = await fileToBase64(file);
+                    document.getElementById('modelImageName').textContent = file.name;
+                    document.getElementById('modelImagePreview').src = URL.createObjectURL(file);
+                    document.getElementById('modelPreview').classList.remove('hidden');
+                    actionButtons.classList.add('hidden'); 
+                    descriptionOutput.classList.add('hidden'); 
+                } catch (error) {
+                    console.error("Error converting model image to Base64:", error);
+                    alertMessage("Gagal memproses gambar model.");
+                }
+            } else {
+                 modelBase64 = null;
+                 document.getElementById('modelImageName').textContent = 'Unggah Foto Model';
+                 document.getElementById('modelPreview').classList.add('hidden');
+            }
+        });
+
+        clothingImageInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                try {
+                    clothingBase64 = await fileToBase64(file);
+                    document.getElementById('clothingImageName').textContent = file.name;
+                    document.getElementById('clothingImagePreview').src = URL.createObjectURL(file);
+                    document.getElementById('clothingPreview').classList.remove('hidden');
+                    actionButtons.classList.add('hidden');
+                    descriptionOutput.classList.add('hidden');
+                } catch (error) {
+                    console.error("Error converting clothing image to Base64:", error);
+                    alertMessage("Gagal memproses gambar pakaian.");
+                }
+            } else {
+                clothingBase64 = null;
+                document.getElementById('clothingImageName').textContent = 'Unggah Foto Pakaian (Opsional)';
+                document.getElementById('clothingPreview').classList.add('hidden');
+            }
+        });
+
+        hijabImageInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                try {
+                    hijabBase64 = await fileToBase64(file);
+                    document.getElementById('hijabImageName').textContent = file.name;
+                    document.getElementById('hijabImagePreview').src = URL.createObjectURL(file);
+                    document.getElementById('hijabPreview').classList.remove('hidden');
+                    actionButtons.classList.add('hidden');
+                    descriptionOutput.classList.add('hidden');
+                    predefinedHijab.value = ''; 
+                } catch (error) {
+                    console.error("Error converting hijab image to Base64:", error);
+                    alertMessage("Gagal memproses gambar jilbab.");
+                }
+            } else {
+                hijabBase64 = null;
+                document.getElementById('hijabImageName').textContent = 'Unggah Foto Jilbab/Headwear';
+                document.getElementById('hijabPreview').classList.add('hidden');
+            }
+        });
+        predefinedHijab.addEventListener('change', () => {
+             hijabBase64 = null; 
+             hijabImageInput.value = '';
+             document.getElementById('hijabImageName').textContent = 'Unggah Foto Jilbab/Headwear';
+             document.getElementById('hijabPreview').classList.add('hidden');
+        });
+
+        hatImageInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                try {
+                    hatBase64 = await fileToBase64(file);
+                    document.getElementById('hatImageName').textContent = file.name;
+                    document.getElementById('hatImagePreview').src = URL.createObjectURL(file);
+                    document.getElementById('hatPreview').classList.remove('hidden');
+                    predefinedHat.value = '';
+                } catch (error) {
+                    console.error("Error converting hat image to Base64:", error);
+                    alertMessage("Gagal memproses gambar topi.");
+                }
+            } else {
+                hatBase64 = null;
+                document.getElementById('hatImageName').textContent = 'Unggah Foto Topi/Cap';
+                document.getElementById('hatPreview').classList.add('hidden');
+            }
+        });
+        predefinedHat.addEventListener('change', () => {
+            hatBase64 = null;
+            hatImageInput.value = '';
+            document.getElementById('hatImageName').textContent = 'Unggah Foto Topi/Cap';
+            document.getElementById('hatPreview').classList.add('hidden');
+        });
+
+        necklaceImageInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                try {
+                    necklaceBase64 = await fileToBase64(file);
+                    document.getElementById('necklaceImageName').textContent = file.name;
+                    document.getElementById('necklaceImagePreview').src = URL.createObjectURL(file);
+                    document.getElementById('necklacePreview').classList.remove('hidden');
+                    predefinedNecklace.value = '';
+                } catch (error) {
+                    console.error("Error converting necklace image to Base64:", error);
+                    alertMessage("Gagal memproses gambar kalung.");
+                }
+            } else {
+                necklaceBase64 = null;
+                document.getElementById('necklaceImageName').textContent = 'Unggah Foto Kalung';
+                document.getElementById('necklacePreview').classList.add('hidden');
+            }
+        });
+        predefinedNecklace.addEventListener('change', () => {
+            necklaceBase64 = null;
+            necklaceImageInput.value = '';
+            document.getElementById('necklaceImageName').textContent = 'Unggah Foto Kalung';
+            document.getElementById('necklacePreview').classList.add('hidden');
+        });
+
+
+        // --- Fungsi Utama dan API Call ---
+
+        downloadButton.addEventListener('click', () => {
+            if (finalImageBase64) {
+                const link = document.createElement('a');
+                link.href = `data:image/png;base64,${finalImageBase64}`;
+                link.download = `hasil-ai-${Date.now()}.png`; 
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                alertMessage("Tidak ada gambar hasil untuk diunduh.");
+            }
+        });
+
+        describeButton.addEventListener('click', async () => {
+            if (!finalImageBase64) {
+                alertMessage("Harap hasilkan gambar terlebih dahulu.");
+                return;
+            }
+
+            // Status Loading
+            describeButton.disabled = true;
+            describeSpinner.classList.remove('hidden');
+            describeButtonText.textContent = 'Menganalisis Gaya...';
+            descriptionOutput.classList.remove('hidden');
+            descriptionText.textContent = 'Sedang dihasilkan, tunggu sebentar...';
+            
+            const userPrompt = "Analisis foto ini. Deskripsikan gaya subjek (termasuk jenis pakaian, headwear, dan semua aksesoris yang dikenakan), kualitas rendering kain dan aksesoris (sebutkan apakah terlihat realistis), warna latar belakang (sebutkan apakah solid dengan kode HEX, gradien aestetik, asli, atau scene bebas AI), dan berikan deskripsi produk yang menarik (maksimal 3 kalimat) diikuti oleh 3 hashtag yang relevan. Format output harus sebagai berikut: [Deskripsi]\n\n[#hashtag1 #hashtag2 #hashtag3]";
+
+            const payload = {
+                contents: [
+                    {
+                        parts: [
+                            { text: userPrompt },
+                            { inlineData: { mimeType: 'image/png', data: finalImageBase64 } }
+                        ]
+                    }
+                ],
+                model: "gemini-2.5-flash-preview-09-2025",
+                generationConfig: {
+                    temperature: 0.7,
+                },
+            };
+
+            const maxRetries = 5;
+            let attempt = 0;
+            let success = false;
+            let resultText = "Gagal menghasilkan deskripsi gaya.";
+
+            while (attempt < maxRetries && !success) {
+                try {
+                    // Panggilan ke Worker Proxy
+                    const response = await fetch(textApiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        // Cek jika Worker mengembalikan error 500 (misalnya key hilang)
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(`Proxy error! status: ${response.status}. Pesan: ${errorData.error?.message || 'Gagal koneksi atau respons tidak valid dari Worker.'}`);
+                    }
+
+                    const result = await response.json();
+                    const textContent = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                    
+                    if (textContent) {
+                        resultText = textContent;
+                        success = true;
+                    } else {
+                        throw new Error("Respons API teks tidak mengandung konten yang valid.");
+                    }
+
+                } catch (error) {
+                    attempt++;
+                    console.error(`Attempt ${attempt} (text) failed:`, error);
+                    if (attempt < maxRetries) {
+                        const delay = Math.pow(2, attempt) * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    }
+                }
+            }
+
+            // Status Selesai
+            describeButton.disabled = false;
+            describeSpinner.classList.add('hidden');
+            describeButtonText.textContent = '✨ Dapatkan Deskripsi Gaya (AI)';
+            descriptionText.textContent = resultText;
+        });
+
+
+        generateButton.addEventListener('click', async () => {
+            if (!modelBase64) { 
+                alertMessage("Harap unggah Foto Model (Wajib) untuk melanjutkan.");
+                return;
+            }
+
+            // Dapatkan semua pilihan input
+            const isClothingUploaded = !!clothingBase64;
+            
+            // Jilbab
+            const selectedHijabMode = document.querySelector('input[name="hijabMode"]:checked').value;
+            const isCustomHijabUploaded = (selectedHijabMode === 'upload' && !!hijabBase64);
+            const isPredefinedHijabSelected = (selectedHijabMode === 'predefined' && predefinedHijab.value !== '');
+            
+            // Topi
+            const hatMode = document.querySelector('input[name="hatMode"]:checked').value;
+            const isCustomHatUploaded = (hatMode === 'upload' && !!hatBase64);
+            const isPredefinedHatSelected = (hatMode === 'predefined' && predefinedHat.value !== '');
+            
+            // Kalung
+            const necklaceMode = document.querySelector('input[name="necklaceMode"]:checked').value;
+            const isCustomNecklaceUploaded = (necklaceMode === 'upload' && !!necklaceBase64);
+            const isPredefinedNecklaceSelected = (necklaceMode === 'predefined' && predefinedNecklace.value !== '');
+            
+            // Aksesoris AI
+            const selectedEyewearValue = selectedEyewear.value;
+            const eyewearPlacementValue = eyewearPlacement.value; 
+            const selectedWatchValue = selectedWatch.value;
+            const selectedFaceCoveringValue = selectedFaceCovering.value;
+
+            // Status Loading
+            generateButton.disabled = true;
+            spinner.classList.remove('hidden');
+            buttonText.textContent = 'Menghasilkan...';
+            resultImage.classList.add('hidden');
+            initialMessage.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+            actionButtons.classList.add('hidden');
+            descriptionOutput.classList.add('hidden');
+            resultContainer.classList.remove('bg-gray-100');
+            finalImageBase64 = null;
+            
+            let fullPrompt = "";
+            let parts = [
+                // Gambar Model (1) - WAJIB
+                { inlineData: { mimeType: modelImageInput.files[0].type, data: modelBase64 } }
+            ];
+            
+            // Tambahkan gambar input opsional ke array parts (sesuai urutan)
+            const inputFiles = [
+                { file: clothingImageInput.files[0], base64: clothingBase64, isUploaded: isClothingUploaded, type: 'Pakaian' },
+                { file: hijabImageInput.files[0], base64: hijabBase64, isUploaded: isCustomHijabUploaded, type: 'Jilbab' },
+                { file: hatImageInput.files[0], base64: hatBase64, isUploaded: isCustomHatUploaded, type: 'Topi' },
+                { file: necklaceImageInput.files[0], base64: necklaceBase64, isUploaded: isCustomNecklaceUploaded, type: 'Kalung' },
+            ];
+
+            inputFiles.forEach(item => {
+                if (item.isUploaded) {
+                    parts.push({ 
+                        inlineData: { mimeType: item.file.type, data: item.base64 } 
+                    });
+                }
+            });
+
+
+            // 1. Instruksi Pakaian
+            if (isClothingUploaded) {
+                fullPrompt += "Lakukan Rendering Kain Realistis: Ganti pakaian yang dikenakan model dengan pakaian dari gambar kedua yang diunggah. Pastikan integrasi dilakukan dengan mulus, meniru lipatan kain yang otentik, jatuhan (drapery) yang alami, dan interaksi cahaya yang akurat sesuai dengan jenis material pakaian (tekstur sutra, wol, katun, dll.), sehingga hasilnya 100% fotorealistik dan Fitroom-grade. ";
+            } else {
+                fullPrompt += "Pertahankan pakaian yang dikenakan model saat ini, jangan ubah atau ganti pakaiannya. ";
+            }
+            
+            // Tentukan indeks gambar tambahan untuk Aksesori dan Headwear
+            let accessoryImageIndex = 2; 
+
+            // 2. Instruksi Jilbab
+            if (isCustomHijabUploaded) {
+                fullPrompt += ` Ganti headwear atau rambut model dengan jilbab dari gambar ${accessoryImageIndex} yang diunggah. Integrasikan jilbab tersebut dengan realistis, perhatikan tekstur kain dan lipatan yang otentik. `;
+                accessoryImageIndex++;
+            } else if (isPredefinedHijabSelected) {
+                fullPrompt += ` Ganti headwear atau rambut model menjadi jilbab dengan deskripsi: "${predefinedHijab.value}". Pastikan tampilan jilbab realistis, memperhatikan jatuhan kain, dan sesuai dengan pencahayaan foto. `;
+            } else {
+                 fullPrompt += " Pertahankan headwear atau rambut model saat ini. ";
+            }
+
+            // 3. Instruksi Aksesoris (Topi)
+            if (isCustomHatUploaded) {
+                fullPrompt += ` Tambahkan topi/cap dari gambar ${accessoryImageIndex} yang diunggah pada kepala model. `;
+                accessoryImageIndex++;
+            } else if (isPredefinedHatSelected) {
+                fullPrompt += ` Model harus mengenakan topi/cap AI dengan deskripsi: "${predefinedHat.value}". `;
+            }
+
+            // 4. Instruksi Aksesoris (Kalung)
+            if (isCustomNecklaceUploaded) {
+                fullPrompt += ` Tambahkan kalung dari gambar ${accessoryImageIndex} yang diunggah pada leher model. Pastikan jatuhan kalung terlihat alami. `;
+            } else if (isPredefinedNecklaceSelected) {
+                fullPrompt += ` Model harus mengenakan kalung AI dengan deskripsi: "${predefinedNecklace.value}". Pastikan pantulan cahaya pada emas atau berlian realistis. `;
+            }
+
+            // 5. Instruksi Aksesoris (Lain-lain AI Generated)
+            if (selectedEyewearValue) {
+                fullPrompt += ` Model harus mengenakan kacamata dengan gaya: "${selectedEyewearValue}", diletakkan ${eyewearPlacementValue}. `;
+            }
+            if (selectedWatchValue) {
+                fullPrompt += ` Model harus mengenakan jam tangan mewah merek: "${selectedWatchValue}". Integrasikan dengan mulus ke pergelangan tangan kiri. `;
+            }
+            if (selectedFaceCoveringValue) {
+                fullPrompt += ` Tutupi wajah model dengan: "${selectedFaceCoveringValue}". `;
+            }
+
+
+            // 6. Instruksi Latar Belakang
+            let backgroundInstruction = "";
+            if (selectedBackgroundMode === 'solid-custom' && selectedHexColor) {
+                // Warna Solid Kustom
+                backgroundInstruction = ` UBAH SELURUH latar belakang foto akhir menjadi warna solid KELAS STUDIO dengan kode HEX ${selectedHexColor}. Latar belakang harus seragam tanpa gradasi, bersih, dan sesuai untuk pas foto/studio.`;
+            } else if (selectedBackgroundMode === 'gradient' && selectedGradientPrompt) {
+                // Gradien Aestetik
+                backgroundInstruction = ` UBAH SELURUH latar belakang foto akhir menjadi ${selectedGradientPrompt}. Latar belakang harus mulus, berkualitas tinggi, dan aestetik.`;
+            } else if (selectedBackgroundMode === 'original') {
+                // Asli
+                backgroundInstruction = " PERTAHANKAN latar belakang asli dari foto model. Hanya ganti pakaian dan tambahkan aksesoris. ";
+            } else if (selectedBackgroundMode === 'free-scene') {
+                // AI Scene Bebas - Gunakan promptInput
+                const scenePrompt = promptInput.value.trim();
+                backgroundInstruction = scenePrompt ? ` UBAH latar belakang foto menjadi adegan baru sesuai dengan prompt berikut: "${scenePrompt}". ` : " PERTAHANKAN latar belakang asli dari foto model. ";
+            }
+
+            // 7. Gabungkan Semua
+            const finalPrompt = `Gunakan gambar Model pertama. ${fullPrompt} ${backgroundInstruction}`;
+            
+            // Tambahkan prompt teks di awal array parts (posisi 0)
+            parts.unshift({ text: finalPrompt });
+
+
+            const payload = {
+                contents: [{ parts: parts }],
+                generationConfig: {
+                    responseModalities: ['TEXT', 'IMAGE']
+                },
+                systemInstruction: {
+                    parts: [{ text: "Anda adalah mesin Rendering Kain dan Aksesoris Realistis (Realistic Fabric and Accessory Rendering Engine) bertenaga Deep Learning. Tugas Anda adalah melakukan Virtual Try-On yang ultra-realistis, mengganti pakaian, jilbab, dan menambahkan berbagai aksesoris (topi, kalung, jam tangan, kacamata) pada foto model dengan mulus. Pastikan hasil akhir menampilkan *drapery* (jatuhan kain), lipatan, dan tekstur material yang otentik, serta pantulan cahaya dan detail aksesoris (misalnya kilau emas/berlian) yang akurat. Hasil harus fotorealistik dan Fitroom-grade. PASTIKAN UNTUK SELALU MENAMBAHKAN WATERMARK PADA GAMBAR." }]
+                },
+            };
+
+            const maxRetries = 5;
+            let attempt = 0;
+            let success = false;
+            let base64Data = null;
+            let apiFeedbackText = null;
+
+            while (attempt < maxRetries && !success) {
+                try {
+                    // Panggilan ke Worker Proxy
+                    const response = await fetch(imageApiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(`Proxy error! status: ${response.status}. Pesan: ${errorData.error?.message || 'Gagal koneksi atau respons tidak valid dari Worker.'}`);
+                    }
+
+                    const result = await response.json();
+                    const candidate = result.candidates?.[0];
+                    
+                    if (candidate) {
+                        base64Data = candidate.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+
+                        if (base64Data) {
+                            success = true;
+                        } else {
+                            const textPart = candidate.content?.parts?.find(p => p.text);
+                            apiFeedbackText = textPart ? textPart.text : "Respons API tidak mengandung data gambar.";
+                            // Throw error to trigger retry or final error message
+                            throw new Error(`API mengembalikan teks, bukan gambar. Pesan: ${apiFeedbackText}`);
+                        }
+                    } else {
+                         throw new Error("Respons API tidak mengandung kandidat yang valid.");
+                    }
+
+                } catch (error) {
+                    attempt++;
+                    console.error(`Attempt ${attempt} failed:`, error);
+                    if (error.message.startsWith('API mengembalikan teks')) {
+                        // Jika model secara eksplisit menolak/mengembalikan teks, jangan tunggu, tapi catat.
+                        if (attempt === maxRetries) {
+                            console.error("Gagal mendapatkan gambar setelah beberapa percobaan.");
+                        }
+                    } else if (attempt < maxRetries) {
+                        const delay = Math.pow(2, attempt) * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    }
+                }
+            }
+
+            // Status Selesai
+            generateButton.disabled = false;
+            spinner.classList.add('hidden');
+            buttonText.textContent = 'Hasilkan Gambar AI';
+            resultContainer.classList.add('bg-gray-100');
+
+
+            if (success && base64Data) {
+                finalImageBase64 = base64Data;
+                const imageUrl = `data:image/png;base64,${finalImageBase64}`;
+                resultImage.src = imageUrl;
+                resultImage.classList.remove('hidden');
+                actionButtons.classList.remove('hidden');
+            } else if (!success) {
+                 actionButtons.classList.add('hidden');
+                 // Tampilkan pesan error yang lebih informatif, termasuk feedback dari API
+                 const finalErrorMsg = `Gagal menghasilkan gambar. Masalah mungkin terjadi pada: (1) Gambar model/pakaian yang tidak dikenali, atau (2) Pelanggaran kebijakan konten. Pesan API: ${apiFeedbackText || "Respons tidak terduga atau terjadi kesalahan koneksi."}`;
+                 alertMessage(finalErrorMsg);
+            }
+        });
+    </script>
+</body>
+</html>
